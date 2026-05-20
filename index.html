@@ -11,334 +11,94 @@
 <link rel="icon" href="icon.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Serif+Display:ital@0;1&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f5f0e8;
-    --ink: #1a1612;
-    --ink2: #5a5248;
-    --ink3: #9a948c;
-    --rule: #d8d0c4;
-    --card-bg: #fffdf8;
-    --accent: #c84b2f;
-    --accent2: #2f6cc8;
-    --shadow: rgba(26,22,18,0.08);
+    --bg: #f5f0e8; --ink: #1a1612; --ink2: #5a5248; --ink3: #9a948c;
+    --rule: #d8d0c4; --card-bg: #fffdf8; --accent: #c84b2f;
   }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: 'DM Mono', monospace; }
+  #bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); width: 0%; transition: width 0.4s ease; z-index: 200; }
+  #app { display: flex; flex-direction: column; height: 100dvh; max-width: 1100px; margin: 0 auto; }
 
-  html, body {
-    min-height: 100%;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'DM Mono', monospace;
-  }
+  /* setup */
+  #setup { max-width: 520px; margin: 60px auto 0; padding: 0 24px; }
+  .setup-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
+  .setup-sub { font-size: 11px; color: var(--ink2); line-height: 1.7; margin-bottom: 24px; }
+  .key-group { margin-bottom: 14px; }
+  .key-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink2); display: flex; align-items: center; gap: 8px; }
+  .badge.free { font-size: 9px; padding: 1px 6px; border-radius: 3px; background: #d4f0e4; color: #1a6644; }
+  .setup-actions { display: flex; gap: 16px; align-items: center; margin-top: 28px; }
 
-  /* loading bar */
-  #bar {
-    position: fixed; top: 0; left: 0; height: 2px;
-    background: var(--accent); width: 0%;
-    transition: width 0.4s ease; z-index: 200;
-  }
+  /* main */
+  #main { display: flex; flex-direction: column; height: 100%; }
 
-  /* ── layout ── */
-  html, body { height: 100%; overflow: hidden; }
-
-  #app {
+  /* swipe track — all cards sit side by side in here */
+  .swipe-track {
+    flex: 1; min-height: 0;
     display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  #main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .source-dots {
-    display: flex; gap: 8px; align-items: center;
-  }
-  .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--rule);
-    transition: background 0.3s;
-  }
-  .dot.active { background: var(--accent); }
-  .dot[data-src="met"].active { background: var(--accent2); }
-  .dot[data-src="clev"].active { background: #c8972f; }
-  .dot[data-src="vam"].active  { background: #2fa878; }
-
-  /* ── setup screen ── */
-  #setup {
-    max-width: 520px;
-    margin: 60px auto 0;
-  }
-
-  .setup-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    margin-bottom: 8px;
-  }
-  .setup-sub {
-    font-size: 11px;
-    color: var(--ink2);
-    line-height: 1.7;
-    margin-bottom: 32px;
-  }
-  .setup-sub a { color: var(--accent); }
-
-  .key-group {
-    margin-bottom: 20px;
-  }
-  .key-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ink2);
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .key-label .badge {
-    font-size: 9px;
-    padding: 1px 6px;
-    border-radius: 3px;
-    background: var(--rule);
-    color: var(--ink2);
-    text-transform: none;
-    letter-spacing: 0;
-  }
-  .key-label .badge.free { background: #d4f0e4; color: #1a6644; }
-
-  input[type="text"], input[type="password"] {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--card-bg);
-    border: 1px solid var(--rule);
-    color: var(--ink);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input:focus { border-color: var(--ink); }
-  input::placeholder { color: var(--ink3); }
-
-  .setup-note {
-    font-size: 10px;
-    color: var(--ink3);
-    margin-top: 5px;
-    line-height: 1.6;
-  }
-  .setup-note a { color: var(--accent2); }
-
-  .divider { border: none; border-top: 1px solid var(--rule); margin: 28px 0; }
-
-  /* ── cards ── */
-  .picks {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    gap: 0;
-  }
-
-  .card {
-    background: var(--card-bg);
-    border: none;
-    border-bottom: 1px solid var(--rule);
     overflow: hidden;
-    transition: box-shadow 0.2s;
-    flex: 1;
-    min-height: 0;
-  }
-  .card:hover { box-shadow: 0 4px 20px var(--shadow); }
-
-  /* ── image-dominant card ── */
-  .card {
     position: relative;
   }
 
-  .card-source-bar {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    z-index: 3;
-    flex-shrink: 0;
+  /* card */
+  .card {
+    flex: 0 0 100%; width: 100%;
+    position: relative;
+    background: var(--card-bg);
+    overflow: hidden;
+    will-change: transform;
+    transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
   }
-  .card-source-bar.met  { background: var(--accent2); }
+
+  .card-source-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: var(--accent); }
   .card-source-bar.clev { background: #c8972f; }
   .card-source-bar.vam  { background: #2fa878; }
+  .card-source-bar.smk  { background: #c42b2b; }
 
-  .card-media {
-    width: 100%;
-    height: 100%;
-    background: var(--rule);
-    overflow: hidden;
-    position: relative;
-  }
-  .card-media img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    display: block;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
+  .card-media { width: 100%; height: 100%; background: var(--rule); overflow: hidden; position: relative; }
+  .card-media img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; opacity: 0; transition: opacity 0.5s; }
   .card-media img.loaded { opacity: 1; }
+  .card-media-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--ink3); letter-spacing: 0.05em; }
+  .card-error { font-size: 10px; color: var(--accent); padding: 40px 18px; text-align: center; line-height: 1.7; }
 
-  .card-media-placeholder {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; color: var(--ink3); letter-spacing: 0.05em;
-  }
-
-  /* caption overlaid at bottom of image */
-  .card-body {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 6px 10px;
-    background: var(--card-bg);
-    border-top: 1px solid var(--rule);
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    z-index: 2;
-  }
-
-  .card-source-label { display: none; }
-
-  .card-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 12px;
-    line-height: 1.2;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .card-artist {
-    font-size: 9px;
-    color: var(--ink3);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
+  .card-body { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 10px; background: var(--card-bg); border-top: 1px solid var(--rule); display: flex; align-items: baseline; gap: 8px; z-index: 2; }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 12px; line-height: 1.2; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .card-artist { font-size: 9px; color: var(--ink3); white-space: nowrap; flex-shrink: 0; }
   .card-meta { display: none; }
-
-  .card-link {
-    font-size: 9px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent);
-    text-decoration: none;
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 1px;
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-  }
+  .card-source-label { display: none; }
+  .card-link { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; flex-shrink: 0; }
   .card-link:hover { opacity: 0.7; }
-
-  /* skeleton state */
   .card.loading .card-body { display: none; }
   .card.loading .card-media { animation: pulse 1.4s ease infinite; }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-  /* error state */
-  .card-error {
-    font-size: 10px;
-    color: var(--accent);
-    padding: 40px 18px;
-    text-align: center;
-    line-height: 1.7;
-  }
+  /* bottom bar */
+  .actions { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--rule); flex-shrink: 0; background: var(--bg); }
 
-  /* ── actions bottom bar ── */
-  .actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    padding: 12px 20px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid var(--rule);
-    flex-shrink: 0;
-    background: var(--bg);
-  }
+  /* position dots (mobile) */
+  .pdots { display: flex; gap: 7px; align-items: center; }
+  .pdot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); transition: background 0.25s, transform 0.25s; cursor: pointer; }
+  .pdot.cur { transform: scale(1.5); }
+  .pdot[data-src="artic"].cur { background: var(--accent); }
+  .pdot[data-src="clev"].cur  { background: #c8972f; }
+  .pdot[data-src="vam"].cur   { background: #2fa878; }
+  .pdot[data-src="smk"].cur   { background: #c42b2b; }
 
-  button {
-    font-family: 'DM Mono', monospace;
-    cursor: pointer;
-    border: none;
-    outline: none;
-  }
-
-  #btnRoll {
-    background: var(--ink);
-    color: var(--bg);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 12px 28px;
-    transition: background 0.2s, transform 0.1s;
-  }
+  button { font-family: 'DM Mono', monospace; cursor: pointer; border: none; outline: none; background: transparent; }
+  #btnRoll { background: var(--ink); color: var(--bg); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 28px; transition: background 0.2s, transform 0.1s; }
   #btnRoll:hover { background: var(--accent); }
   #btnRoll:active { transform: scale(0.97); }
   #btnRoll:disabled { opacity: 0.4; cursor: default; }
-
-  #btnSetup {
-    background: transparent;
-    color: var(--ink3);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--rule);
-    transition: color 0.2s;
-  }
+  #btnSetup { color: var(--ink3); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
   #btnSetup:hover { color: var(--ink); }
+  #btnClose { color: var(--ink3); font-size: 10px; letter-spacing: 0.06em; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
+  #btnClose:hover { color: var(--ink); }
 
-  #btnSaveSetup {
-    background: var(--ink);
-    color: var(--bg);
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 12px 28px;
-    transition: background 0.2s;
-  }
-  #btnSaveSetup:hover { background: var(--accent); }
-
-  #btnCancelSetup {
-    background: transparent;
-    color: var(--ink3);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--rule);
-    transition: color 0.2s;
-  }
-  #btnCancelSetup:hover { color: var(--ink); }
-
-  .setup-actions {
-    display: flex; gap: 16px; align-items: center; margin-top: 32px; flex-wrap: wrap;
-  }
-
-  /* ── desktop ── */
+  /* desktop: show all cards side by side, no swipe */
   @media (min-width: 700px) {
-    .picks { flex-direction: row; }
-    .card { border-bottom: none; border-right: 1px solid var(--rule); }
+    .card { flex: 1; transition: none; border-right: 1px solid var(--rule); }
     .card:last-child { border-right: none; }
+    .pdots { display: none; }
   }
 </style>
 </head>
@@ -348,154 +108,123 @@
 
   <div id="setup" style="display:none">
     <div class="setup-title">Sources</div>
-    <p class="setup-sub">
-      All four sources are active with no setup required.
-    </p>
-
-    <div class="key-group">
-      <div class="key-label">Art Institute of Chicago <span class="badge free">no key needed</span></div>
-      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
-    </div>
-    <div class="key-group">
-      <div class="key-label">Cleveland Museum of Art <span class="badge free">no key needed</span></div>
-      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
-    </div>
-    <div class="key-group">
-      <div class="key-label">Victoria & Albert Museum <span class="badge free">no key needed</span></div>
-      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
-    </div>
-
-    <div class="setup-actions">
-      <button id="btnCancelSetup">Close</button>
-    </div>
+    <p class="setup-sub">All four sources are active with no setup required.</p>
+    <div class="key-group"><div class="key-label">Art Institute of Chicago <span class="badge free">no key needed</span></div></div>
+    <div class="key-group"><div class="key-label">Cleveland Museum of Art <span class="badge free">no key needed</span></div></div>
+    <div class="key-group"><div class="key-label">Victoria &amp; Albert Museum <span class="badge free">no key needed</span></div></div>
+    <div class="key-group"><div class="key-label">SMK Copenhagen <span class="badge free">no key needed</span></div></div>
+    <div class="setup-actions"><button id="btnClose">Close</button></div>
   </div>
 
-  <!-- MAIN SCREEN -->
   <div id="main" style="display:none">
-    <div class="picks" id="picks"></div>
-
+    <div class="swipe-track" id="track"></div>
     <div class="actions">
-      <button id="btnSetup">Keys</button>
-      <div class="source-dots" id="sourceDots">
-        <div class="dot active" data-src="artic" title="Art Institute of Chicago"></div>
-        <div class="dot active" data-src="clev" title="Cleveland Museum of Art"></div>
-        <div class="dot active" data-src="vam" title="Victoria & Albert Museum"></div>
-      </div>
+      <button id="btnSetup">Sources</button>
+      <div class="pdots" id="pdots"></div>
       <button id="btnRoll">Roll</button>
     </div>
   </div>
 
 </div>
-
 <script>
-let keys = {};
-let rolling = false;
-
-// ── storage ──────────────────────────────────────────────────────────
-function loadKeys() {}
-function saveKeys() {}
-
-// ── sources ───────────────────────────────────────────────────────────
 const SOURCES = [
   { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
   { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
   { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
+  { id: 'smk',   label: 'SMK Copenhagen',           barClass: 'smk' },
 ];
 
-function activeSources() {
-  return SOURCES.filter(s => !s.needsKey || keys[s.id]);
-}
-
-// ── fetch helpers ─────────────────────────────────────────────────────
-
 async function fetchArtic() {
-  // random page in a large slice of public-domain works with images
-  const total = 130000;
-  const page  = Math.floor(Math.random() * 5000) + 1;
-  const fields = 'id,title,artist_display,date_display,medium_display,image_id,department_title';
-  const r = await fetch(
-    `https://api.artic.edu/api/v1/artworks?page=${page}&limit=1&fields=${fields}&has_not_been_viewed_much=false`
-  );
-  if (!r.ok) throw new Error('ARTIC fetch failed');
+  const page = Math.floor(Math.random() * 5000) + 1;
+  const r = await fetch(`https://api.artic.edu/api/v1/artworks?page=${page}&limit=1&fields=id,title,artist_display,date_display,image_id`);
+  if (!r.ok) throw new Error('ARTIC failed');
   const j = await r.json();
-  const art = j.data?.[0];
-  if (!art || !art.image_id) throw new Error('no image');
-  return {
-    title:    art.title,
-    artist:   art.artist_display?.split('\n')[0] || '',
-    meta:     [art.date_display, art.medium_display, art.department_title].filter(Boolean).join(' · '),
-    image:    `https://www.artic.edu/iiif/2/${art.image_id}/full/843,/0/default.jpg`,
-    link:     `https://www.artic.edu/artworks/${art.id}`,
-    src:      'artic',
-  };
+  const a = j.data?.[0];
+  if (!a?.image_id) throw new Error('no image');
+  return { title: a.title, artist: a.artist_display?.split('\n')[0] || '', meta: a.date_display || '', image: `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg`, link: `https://www.artic.edu/artworks/${a.id}` };
 }
-
 
 async function fetchClev() {
   const skip = Math.floor(Math.random() * 3000);
-  const r = await fetch(
-    `https://openaccess-api.clevelandart.org/api/artworks?has_image=1&limit=1&skip=${skip}&fields=id,title,creators,creation_date,images,url,department`
-  );
-  if (!r.ok) throw new Error('Cleveland fetch failed');
+  const r = await fetch(`https://openaccess-api.clevelandart.org/api/artworks?has_image=1&limit=1&skip=${skip}&fields=id,title,creators,creation_date,images,url`);
+  if (!r.ok) throw new Error('Cleveland failed');
   const j = await r.json();
-  const art = j.data?.[0];
-  if (!art) throw new Error('no Cleveland result');
-  const img = art.images?.web?.url || art.images?.print?.url || '';
-  if (!img) throw new Error('no Cleveland image');
-  const artist = art.creators?.[0]?.description || '';
-  return {
-    title:  art.title || 'Untitled',
-    artist,
-    meta:   [art.creation_date, art.department].filter(Boolean).join(' · '),
-    image:  img,
-    link:   art.url || `https://www.clevelandart.org/art/${art.id}`,
-    src:    'clev',
-  };
+  const a = j.data?.[0];
+  const img = a?.images?.web?.url || a?.images?.print?.url;
+  if (!img) throw new Error('no image');
+  return { title: a.title || 'Untitled', artist: a.creators?.[0]?.description || '', meta: a.creation_date || '', image: img, link: a.url || '' };
 }
 
 async function fetchVam() {
-  // V&A has ~1.2M records; pick a random page of image-bearing objects
   const page = Math.floor(Math.random() * 5000) + 1;
-  const r = await fetch(
-    `https://api.vam.ac.uk/v2/objects/search?images_exist=1&page_size=1&page=${page}&fields=systemNumber,_primaryTitle,_primaryMaker,_primaryDate,_primaryImageId,_images`
-  );
-  if (!r.ok) throw new Error('V&A fetch failed');
+  const r = await fetch(`https://api.vam.ac.uk/v2/objects/search?images_exist=1&page_size=1&page=${page}&fields=systemNumber,_primaryTitle,_primaryMaker,_primaryDate,_primaryImageId`);
+  if (!r.ok) throw new Error('V&A failed');
   const j = await r.json();
   const rec = j.records?.[0];
-  if (!rec) throw new Error('no V&A result');
-  const imgId = rec._primaryImageId;
-  if (!imgId) throw new Error('no V&A image');
-  return {
-    title:  rec._primaryTitle || 'Untitled',
-    artist: rec._primaryMaker?.name || '',
-    meta:   rec._primaryDate || '',
-    image:  `https://framemark.vam.ac.uk/collections/${imgId}/full/735,/0/default.jpg`,
-    link:   `https://collections.vam.ac.uk/item/${rec.systemNumber}`,
-    src:    'vam',
-  };
+  if (!rec?._primaryImageId) throw new Error('no image');
+  return { title: rec._primaryTitle || 'Untitled', artist: rec._primaryMaker?.name || '', meta: rec._primaryDate || '', image: `https://framemark.vam.ac.uk/collections/${rec._primaryImageId}/full/735,/0/default.jpg`, link: `https://collections.vam.ac.uk/item/${rec.systemNumber}` };
 }
 
-const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam };
+async function fetchSmk() {
+  const offset = Math.floor(Math.random() * 24000);
+  const r = await fetch(`https://api.smk.dk/api/v1/art/search?keys=*&has_image=true&public_domain=true&offset=${offset}&rows=1&lang=en`);
+  if (!r.ok) throw new Error('SMK failed');
+  const j = await r.json();
+  const a = j.items?.[0];
+  const img = a?.image_thumbnail || a?.image_native;
+  if (!img) throw new Error('no image');
+  return { title: a.titles?.[0]?.title || 'Untitled', artist: a.production?.[0]?.creator || '', meta: a.production_date?.[0]?.period || '', image: img, link: `https://open.smk.dk/en/artwork/image/${a.object_number}` };
+}
 
-// ── UI ────────────────────────────────────────────────────────────────
-function updateDots() {
-  document.querySelectorAll('.dot').forEach(dot => {
-    const id = dot.dataset.src;
-    const active = SOURCES.find(s=>s.id===id);
-    if (!active) return;
-    const on = !active.needsKey || keys[id];
-    dot.classList.toggle('active', !!on);
+const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam, smk: fetchSmk };
+
+// ── swipe ─────────────────────────────────────────────────────────────
+let cur = 0;
+let rolling = false;
+const isDesktop = () => window.innerWidth >= 700;
+
+function goTo(idx) {
+  const cards = [...document.querySelectorAll('.card')];
+  cur = Math.max(0, Math.min(idx, cards.length - 1));
+  if (!isDesktop()) cards.forEach((c, i) => c.style.transform = `translateX(${(i - cur) * 100}%)`);
+  document.querySelectorAll('.pdot').forEach((d, i) => d.classList.toggle('cur', i === cur));
+}
+
+let tx0 = 0, dx = 0, dragging = false;
+const getTrack = () => document.getElementById('track');
+
+function onTS(e) { if (isDesktop()) return; tx0 = e.touches[0].clientX; dx = 0; dragging = true; }
+function onTM(e) {
+  if (!dragging || isDesktop()) return;
+  dx = e.touches[0].clientX - tx0;
+  [...document.querySelectorAll('.card')].forEach((c, i) => {
+    c.style.transition = 'none';
+    c.style.transform = `translateX(calc(${(i - cur) * 100}% + ${dx}px))`;
   });
 }
+function onTE() {
+  if (!dragging || isDesktop()) return;
+  dragging = false;
+  [...document.querySelectorAll('.card')].forEach(c => c.style.transition = '');
+  const thresh = window.innerWidth * 0.25;
+  if (dx < -thresh) goTo(cur + 1);
+  else if (dx > thresh) goTo(cur - 1);
+  else goTo(cur);
+}
 
+// ── build / render ────────────────────────────────────────────────────
 function buildCards() {
-  const picks = document.getElementById('picks');
-  picks.innerHTML = '';
-  const srcs = activeSources();
-  srcs.forEach(src => {
+  const t = getTrack();
+  t.innerHTML = '';
+  const pd = document.getElementById('pdots');
+  pd.innerHTML = '';
+  cur = 0;
+
+  SOURCES.forEach((src, i) => {
     const card = document.createElement('div');
     card.className = 'card loading';
     card.dataset.src = src.id;
+    if (!isDesktop()) card.style.transform = `translateX(${i * 100}%)`;
     card.innerHTML = `
       <div class="card-source-bar ${src.barClass}"></div>
       <div class="card-media"><div class="card-media-placeholder">loading</div></div>
@@ -505,27 +234,35 @@ function buildCards() {
         <div class="card-artist"></div>
         <div class="card-meta"></div>
         <a class="card-link" href="#" target="_blank">View</a>
-      </div>
-    `;
-    picks.appendChild(card);
+      </div>`;
+    t.appendChild(card);
+
+    const dot = document.createElement('div');
+    dot.className = 'pdot' + (i === 0 ? ' cur' : '');
+    dot.dataset.src = src.id;
+    dot.onclick = () => goTo(i);
+    pd.appendChild(dot);
   });
+
+  t.removeEventListener('touchstart', onTS);
+  t.removeEventListener('touchmove', onTM);
+  t.removeEventListener('touchend', onTE);
+  t.addEventListener('touchstart', onTS, { passive: true });
+  t.addEventListener('touchmove', onTM, { passive: true });
+  t.addEventListener('touchend', onTE);
 }
 
 function renderCard(srcId, result) {
   const card = document.querySelector(`.card[data-src="${srcId}"]`);
   if (!card) return;
   card.classList.remove('loading');
-
+  const media = card.querySelector('.card-media');
   if (result.error) {
-    card.querySelector('.card-media').innerHTML =
-      `<div class="card-error">${result.error}</div>`;
+    media.innerHTML = `<div class="card-error">${result.error}</div>`;
     card.querySelector('.card-title').textContent = '—';
     card.querySelector('.card-link').style.display = 'none';
     return;
   }
-
-  // image
-  const media = card.querySelector('.card-media');
   if (result.image) {
     const img = document.createElement('img');
     img.onload  = () => img.classList.add('loaded');
@@ -536,43 +273,28 @@ function renderCard(srcId, result) {
   } else {
     media.innerHTML = '<div class="card-media-placeholder">no image</div>';
   }
-
   card.querySelector('.card-title').textContent  = result.title  || 'Untitled';
   card.querySelector('.card-artist').textContent = result.artist || '';
-  card.querySelector('.card-meta').textContent   = result.meta   || '';
   const link = card.querySelector('.card-link');
   if (result.link) { link.href = result.link; link.style.display = ''; }
   else link.style.display = 'none';
 }
 
 // ── roll ──────────────────────────────────────────────────────────────
-let barTimer = null;
-
-function setBar(pct) {
-  document.getElementById('bar').style.width = pct + '%';
-}
+function setBar(p) { document.getElementById('bar').style.width = p + '%'; }
 
 async function roll() {
   if (rolling) return;
   rolling = true;
   document.getElementById('btnRoll').disabled = true;
   setBar(10);
-
   buildCards();
-
-  const srcs = activeSources();
   let done = 0;
-
   try {
-    await Promise.all(srcs.map(async src => {
-      try {
-        const result = await FETCHERS[src.id]();
-        renderCard(src.id, result);
-      } catch(e) {
-        renderCard(src.id, { error: e.message || 'fetch failed' });
-      }
-      done++;
-      setBar(10 + (done / srcs.length) * 85);
+    await Promise.all(SOURCES.map(async src => {
+      try { renderCard(src.id, await FETCHERS[src.id]()); }
+      catch(e) { renderCard(src.id, { error: e.message || 'failed' }); }
+      setBar(10 + (++done / SOURCES.length) * 85);
     }));
   } finally {
     setBar(100);
@@ -582,29 +304,20 @@ async function roll() {
   }
 }
 
-// ── setup UI ──────────────────────────────────────────────────────────
-function showSetup() {
+// ── setup ─────────────────────────────────────────────────────────────
+document.getElementById('btnSetup').onclick = () => {
   document.getElementById('main').style.display  = 'none';
   document.getElementById('setup').style.display = '';
-}
-
-function showMain() {
+};
+document.getElementById('btnClose').onclick = () => {
   document.getElementById('setup').style.display = 'none';
   document.getElementById('main').style.display  = '';
-  updateDots();
-}
-
-document.getElementById('btnSetup').onclick = showSetup;
-document.getElementById('btnCancelSetup').onclick = showMain;
-document.getElementById('btnRoll').onclick = () => {
-  rolling = false; // safety reset
-  roll();
 };
+document.getElementById('btnRoll').onclick = () => { rolling = false; roll(); };
 
 // ── boot ──────────────────────────────────────────────────────────────
-loadKeys();
-showMain();
-setTimeout(roll, 50); // slight delay ensures DOM is settled
+document.getElementById('main').style.display = '';
+setTimeout(roll, 50);
 </script>
 </body>
 </html>
