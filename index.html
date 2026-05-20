@@ -357,10 +357,6 @@
       <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
     <div class="key-group">
-      <div class="key-label">Metropolitan Museum of Art <span class="badge free">no key needed</span></div>
-      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
-    </div>
-    <div class="key-group">
       <div class="key-label">Cleveland Museum of Art <span class="badge free">no key needed</span></div>
       <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
@@ -382,7 +378,6 @@
       <button id="btnSetup">Keys</button>
       <div class="source-dots" id="sourceDots">
         <div class="dot active" data-src="artic" title="Art Institute of Chicago"></div>
-        <div class="dot active" data-src="met" title="Metropolitan Museum of Art"></div>
         <div class="dot active" data-src="clev" title="Cleveland Museum of Art"></div>
         <div class="dot active" data-src="vam" title="Victoria & Albert Museum"></div>
       </div>
@@ -403,7 +398,6 @@ function saveKeys() {}
 // ── sources ───────────────────────────────────────────────────────────
 const SOURCES = [
   { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
-  { id: 'met',   label: 'Met Museum',               barClass: 'met' },
   { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
   { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
 ];
@@ -508,7 +502,7 @@ async function fetchVam() {
   };
 }
 
-const FETCHERS = { artic: fetchArtic, met: fetchMet, clev: fetchClev, vam: fetchVam };
+const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam };
 
 // ── UI ────────────────────────────────────────────────────────────────
 function updateDots() {
