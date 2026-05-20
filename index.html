@@ -430,33 +430,6 @@ async function fetchArtic() {
   };
 }
 
-async function fetchMet() {
-  // search for objects with images only
-  const sr = await fetch(
-    'https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=*'
-  );
-  if (!sr.ok) throw new Error('Met search failed');
-  const sj = await sr.json();
-  const ids = sj.objectIDs;
-  if (!ids?.length) throw new Error('no ids');
-  // try a few random picks until we get one with a primary image
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const id = ids[Math.floor(Math.random() * Math.min(ids.length, 50000))];
-    const r  = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
-    if (!r.ok) continue;
-    const a  = await r.json();
-    if (!a.primaryImageSmall && !a.primaryImage) continue;
-    return {
-      title:  a.title,
-      artist: a.artistDisplayName || a.culture || '',
-      meta:   [a.objectDate, a.medium, a.department].filter(Boolean).join(' · '),
-      image:  a.primaryImageSmall || a.primaryImage,
-      link:   a.objectURL,
-      src:    'met',
-    };
-  }
-  throw new Error('Met: no image found after retries');
-}
 
 async function fetchClev() {
   const skip = Math.floor(Math.random() * 3000);
@@ -590,21 +563,23 @@ async function roll() {
   const srcs = activeSources();
   let done = 0;
 
-  await Promise.all(srcs.map(async src => {
-    try {
-      const result = await FETCHERS[src.id]();
-      renderCard(src.id, result);
-    } catch(e) {
-      renderCard(src.id, { error: e.message || 'fetch failed' });
-    }
-    done++;
-    setBar(10 + (done / srcs.length) * 85);
-  }));
-
-  setBar(100);
-  setTimeout(() => setBar(0), 600);
-  document.getElementById('btnRoll').disabled = false;
-  rolling = false;
+  try {
+    await Promise.all(srcs.map(async src => {
+      try {
+        const result = await FETCHERS[src.id]();
+        renderCard(src.id, result);
+      } catch(e) {
+        renderCard(src.id, { error: e.message || 'fetch failed' });
+      }
+      done++;
+      setBar(10 + (done / srcs.length) * 85);
+    }));
+  } finally {
+    setBar(100);
+    setTimeout(() => setBar(0), 600);
+    document.getElementById('btnRoll').disabled = false;
+    rolling = false;
+  }
 }
 
 // ── setup UI ──────────────────────────────────────────────────────────
@@ -621,11 +596,15 @@ function showMain() {
 
 document.getElementById('btnSetup').onclick = showSetup;
 document.getElementById('btnCancelSetup').onclick = showMain;
+document.getElementById('btnRoll').onclick = () => {
+  rolling = false; // safety reset
+  roll();
+};
 
 // ── boot ──────────────────────────────────────────────────────────────
 loadKeys();
 showMain();
-roll();
+setTimeout(roll, 50); // slight delay ensures DOM is settled
 </script>
 </body>
 </html>
