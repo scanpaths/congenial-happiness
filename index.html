@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>museum find</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Find">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f0e8;
+    --ink: #1a1612;
+    --ink2: #5a5248;
+    --ink3: #9a948c;
+    --rule: #d8d0c4;
+    --card-bg: #fffdf8;
+    --accent: #c84b2f;
+    --accent2: #2f6cc8;
+    --shadow: rgba(26,22,18,0.08);
+  }
+
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* loading bar */
+  #bar {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: var(--accent); width: 0%;
+    transition: width 0.4s ease; z-index: 200;
+  }
+
+  /* ── layout ── */
+  #app { max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .wordmark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .wordmark em { font-style: italic; color: var(--accent); }
+
+  .header-right {
+    display: flex; gap: 16px; align-items: center;
+  }
+
+  .source-dots {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--rule);
+    transition: background 0.3s;
+  }
+  .dot.active { background: var(--accent); }
+  .dot[data-src="met"].active { background: var(--accent2); }
+  .dot[data-src="dpla"].active { background: #2fa878; }
+  .dot[data-src="rijs"].active { background: #c8972f; }
+
+  /* ── setup screen ── */
+  #setup {
+    max-width: 520px;
+    margin: 60px auto 0;
+  }
+
+  .setup-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .setup-sub {
+    font-size: 11px;
+    color: var(--ink2);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .setup-sub a { color: var(--accent); }
+
+  .key-group {
+    margin-bottom: 20px;
+  }
+  .key-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink2);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .key-label .badge {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--rule);
+    color: var(--ink2);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .key-label .badge.free { background: #d4f0e4; color: #1a6644; }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--ink); }
+  input::placeholder { color: var(--ink3); }
+
+  .setup-note {
+    font-size: 10px;
+    color: var(--ink3);
+    margin-top: 5px;
+    line-height: 1.6;
+  }
+  .setup-note a { color: var(--accent2); }
+
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 28px 0; }
+
+  /* ── cards ── */
+  .picks {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px var(--shadow); }
+
+  .card-source-bar {
+    height: 3px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .card-source-bar.met  { background: var(--accent2); }
+  .card-source-bar.dpla { background: #2fa878; }
+  .card-source-bar.rijs { background: #c8972f; }
+
+  .card-media {
+    width: 100%;
+    height: 220px;
+    background: var(--rule);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .card-media img.loaded { opacity: 1; }
+
+  .card-media-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ink3); letter-spacing: 0.05em;
+  }
+
+  .card-body {
+    padding: 16px 18px 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-source-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink3);
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .card-title.italic { font-style: italic; }
+
+  .card-artist {
+    font-size: 11px;
+    color: var(--ink2);
+  }
+
+  .card-meta {
+    font-size: 10px;
+    color: var(--ink3);
+    margin-top: 2px;
+    line-height: 1.6;
+  }
+
+  .card-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    align-self: flex-start;
+  }
+  .card-link:hover { opacity: 0.7; }
+
+  /* skeleton state */
+  .card.loading .card-title,
+  .card.loading .card-artist,
+  .card.loading .card-meta,
+  .card.loading .card-link { visibility: hidden; }
+  .card.loading .card-media { animation: pulse 1.4s ease infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* error state */
+  .card-error {
+    font-size: 10px;
+    color: var(--accent);
+    padding: 40px 18px;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* ── actions ── */
+  .actions {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    border: none;
+    outline: none;
+  }
+
+  #btnRoll {
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  #btnRoll:hover { background: var(--accent); }
+  #btnRoll:active { transform: scale(0.97); }
+  #btnRoll:disabled { opacity: 0.4; cursor: default; }
+
+  #btnSetup {
+    background: transparent;
+    color: var(--ink3);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+    transition: color 0.2s;
+  }
+  #btnSetup:hover { color: var(--ink); }
+
+  #btnSaveSetup {
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    transition: background 0.2s;
+  }
+  #btnSaveSetup:hover { background: var(--accent); }
+
+  #btnCancelSetup {
+    background: transparent;
+    color: var(--ink3);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+    transition: color 0.2s;
+  }
+  #btnCancelSetup:hover { color: var(--ink); }
+
+  .setup-actions {
+    display: flex; gap: 16px; align-items: center; margin-top: 32px; flex-wrap: wrap;
+  }
+
+  /* ── desktop ── */
+  @media (min-width: 700px) {
+    .picks { flex-direction: row; align-items: stretch; }
+    .card { flex: 1; min-width: 0; }
+    .card-media { height: 200px; }
+    .actions { max-width: 360px; }
+  }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="app">
+
+  <!-- SETUP SCREEN -->
+  <div id="setup" style="display:none">
+    <div class="setup-title">API keys</div>
+    <p class="setup-sub">
+      ARTIC and the Met work with no setup. DPLA and Rijksmuseum require free API keys —
+      add the ones you have and leave the rest blank to skip those sources.
+    </p>
+
+    <div class="key-group">
+      <div class="key-label">
+        Art Institute of Chicago
+        <span class="badge free">no key needed</span>
+      </div>
+      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
+    </div>
+
+    <div class="key-group">
+      <div class="key-label">
+        Metropolitan Museum of Art
+        <span class="badge free">no key needed</span>
+      </div>
+      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
+    </div>
+
+    <hr class="divider">
+
+    <div class="key-group">
+      <div class="key-label">DPLA API Key</div>
+      <input type="password" id="keyDpla" placeholder="32-character key">
+      <p class="setup-note">
+        Get a free key at <a href="https://pro.dp.la/developers/api-key" target="_blank">pro.dp.la/developers/api-key</a> — enter your email and check your inbox.
+      </p>
+    </div>
+
+    <div class="key-group">
+      <div class="key-label">Rijksmuseum API Key</div>
+      <input type="password" id="keyRijs" placeholder="your key">
+      <p class="setup-note">
+        Register at <a href="https://www.rijksmuseum.nl/en/rijksstudio" target="_blank">rijksmuseum.nl/en/rijksstudio</a>, then find your key under Account → Advanced settings.
+      </p>
+    </div>
+
+    <div class="setup-actions">
+      <button id="btnSaveSetup">Save</button>
+      <button id="btnCancelSetup">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MAIN SCREEN -->
+  <div id="main" style="display:none">
+    <header>
+      <div class="wordmark">museum <em>find</em></div>
+      <div class="header-right">
+        <div class="source-dots" id="sourceDots">
+          <div class="dot active" data-src="artic" title="Art Institute of Chicago"></div>
+          <div class="dot active" data-src="met" title="Metropolitan Museum of Art"></div>
+          <div class="dot" data-src="dpla" title="DPLA"></div>
+          <div class="dot" data-src="rijs" title="Rijksmuseum"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="picks" id="picks"></div>
+
+    <div class="actions">
+      <button id="btnRoll">Roll</button>
+      <button id="btnSetup">Keys</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const LS_DPLA  = 'mp_dpla_key';
+const LS_RIJS  = 'mp_rijs_key';
+
+let keys = { dpla: '', rijs: '' };
+let rolling = false;
+
+// ── storage ──────────────────────────────────────────────────────────
+function loadKeys() {
+  keys.dpla = localStorage.getItem(LS_DPLA) || '';
+  keys.rijs = localStorage.getItem(LS_RIJS) || '';
+}
+function saveKeys() {
+  const d = document.getElementById('keyDpla').value.trim();
+  const r = document.getElementById('keyRijs').value.trim();
+  if (d) localStorage.setItem(LS_DPLA, d); else localStorage.removeItem(LS_DPLA);
+  if (r) localStorage.setItem(LS_RIJS, r); else localStorage.removeItem(LS_RIJS);
+  loadKeys();
+}
+
+// ── sources ───────────────────────────────────────────────────────────
+const SOURCES = [
+  { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
+  { id: 'met',   label: 'Met Museum',               barClass: 'met' },
+  { id: 'dpla',  label: 'DPLA',                     barClass: 'dpla', needsKey: true },
+  { id: 'rijs',  label: 'Rijksmuseum',              barClass: 'rijs', needsKey: true },
+];
+
+function activeSources() {
+  return SOURCES.filter(s => !s.needsKey || keys[s.id]);
+}
+
+// ── fetch helpers ─────────────────────────────────────────────────────
+
+async function fetchArtic() {
+  // random page in a large slice of public-domain works with images
+  const total = 130000;
+  const page  = Math.floor(Math.random() * 5000) + 1;
+  const fields = 'id,title,artist_display,date_display,medium_display,image_id,department_title';
+  const r = await fetch(
+    `https://api.artic.edu/api/v1/artworks?page=${page}&limit=1&fields=${fields}&has_not_been_viewed_much=false`
+  );
+  if (!r.ok) throw new Error('ARTIC fetch failed');
+  const j = await r.json();
+  const art = j.data?.[0];
+  if (!art || !art.image_id) throw new Error('no image');
+  return {
+    title:    art.title,
+    artist:   art.artist_display?.split('\n')[0] || '',
+    meta:     [art.date_display, art.medium_display, art.department_title].filter(Boolean).join(' · '),
+    image:    `https://www.artic.edu/iiif/2/${art.image_id}/full/843,/0/default.jpg`,
+    link:     `https://www.artic.edu/artworks/${art.id}`,
+    src:      'artic',
+  };
+}
+
+async function fetchMet() {
+  // search for objects with images only
+  const sr = await fetch(
+    'https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=*'
+  );
+  if (!sr.ok) throw new Error('Met search failed');
+  const sj = await sr.json();
+  const ids = sj.objectIDs;
+  if (!ids?.length) throw new Error('no ids');
+  // try a few random picks until we get one with a primary image
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const id = ids[Math.floor(Math.random() * Math.min(ids.length, 50000))];
+    const r  = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
+    if (!r.ok) continue;
+    const a  = await r.json();
+    if (!a.primaryImageSmall && !a.primaryImage) continue;
+    return {
+      title:  a.title,
+      artist: a.artistDisplayName || a.culture || '',
+      meta:   [a.objectDate, a.medium, a.department].filter(Boolean).join(' · '),
+      image:  a.primaryImageSmall || a.primaryImage,
+      link:   a.objectURL,
+      src:    'met',
+    };
+  }
+  throw new Error('Met: no image found after retries');
+}
+
+async function fetchDpla() {
+  if (!keys.dpla) throw new Error('no dpla key');
+  // random offset within visual arts
+  const page  = Math.floor(Math.random() * 500) + 1;
+  const r = await fetch(
+    `https://api.dp.la/v2/items?q=&page=${page}&page_size=5&type=image&api_key=${keys.dpla}`
+  );
+  if (!r.ok) throw new Error('DPLA fetch failed');
+  const j = await r.json();
+  const docs = j.docs?.filter(d => d.object);
+  if (!docs?.length) throw new Error('no DPLA image');
+  const item = docs[Math.floor(Math.random() * docs.length)];
+  const sr   = item.sourceResource || {};
+  const title  = Array.isArray(sr.title)  ? sr.title[0]  : sr.title  || 'Untitled';
+  const creator = Array.isArray(sr.creator) ? sr.creator[0] : sr.creator || '';
+  const date    = sr.date?.displayDate || '';
+  const subject = Array.isArray(sr.subject) ? sr.subject.slice(0,2).map(s=>s.name||s).join(', ') : '';
+  return {
+    title,
+    artist:  creator,
+    meta:    [date, subject, item.dataProvider].filter(Boolean).join(' · '),
+    image:   item.object,
+    link:    item.isShownAt || `https://dp.la/item/${item.id}`,
+    src:     'dpla',
+  };
+}
+
+async function fetchRijs() {
+  if (!keys.rijs) throw new Error('no rijs key');
+  const page = Math.floor(Math.random() * 2000) + 1;
+  const r = await fetch(
+    `https://www.rijksmuseum.nl/api/en/collection?key=${keys.rijs}&imgonly=true&ps=1&p=${page}&s=relevance`
+  );
+  if (!r.ok) throw new Error('Rijksmuseum fetch failed');
+  const j = await r.json();
+  const art = j.artObjects?.[0];
+  if (!art) throw new Error('no Rijs result');
+  return {
+    title:  art.title,
+    artist: art.principalOrFirstMaker || '',
+    meta:   art.longTitle || '',
+    image:  art.webImage?.url || '',
+    link:   art.links?.web || `https://www.rijksmuseum.nl/en/collection/${art.objectNumber}`,
+    src:    'rijs',
+  };
+}
+
+const FETCHERS = { artic: fetchArtic, met: fetchMet, dpla: fetchDpla, rijs: fetchRijs };
+
+// ── UI ────────────────────────────────────────────────────────────────
+function updateDots() {
+  document.querySelectorAll('.dot').forEach(dot => {
+    const id = dot.dataset.src;
+    const active = SOURCES.find(s=>s.id===id);
+    if (!active) return;
+    const on = !active.needsKey || keys[id];
+    dot.classList.toggle('active', !!on);
+  });
+}
+
+function buildCards() {
+  const picks = document.getElementById('picks');
+  picks.innerHTML = '';
+  const srcs = activeSources();
+  srcs.forEach(src => {
+    const card = document.createElement('div');
+    card.className = 'card loading';
+    card.dataset.src = src.id;
+    card.innerHTML = `
+      <div class="card-source-bar ${src.barClass}"></div>
+      <div class="card-media"><div class="card-media-placeholder">loading</div></div>
+      <div class="card-body">
+        <div class="card-source-label">${src.label}</div>
+        <div class="card-title">—</div>
+        <div class="card-artist"></div>
+        <div class="card-meta"></div>
+        <a class="card-link" href="#" target="_blank">View</a>
+      </div>
+    `;
+    picks.appendChild(card);
+  });
+}
+
+function renderCard(srcId, result) {
+  const card = document.querySelector(`.card[data-src="${srcId}"]`);
+  if (!card) return;
+  card.classList.remove('loading');
+
+  if (result.error) {
+    card.querySelector('.card-media').innerHTML =
+      `<div class="card-error">${result.error}</div>`;
+    card.querySelector('.card-title').textContent = '—';
+    card.querySelector('.card-link').style.display = 'none';
+    return;
+  }
+
+  // image
+  const media = card.querySelector('.card-media');
+  if (result.image) {
+    const img = document.createElement('img');
+    img.onload  = () => img.classList.add('loaded');
+    img.onerror = () => { media.innerHTML = '<div class="card-media-placeholder">no image</div>'; };
+    img.src = result.image;
+    media.innerHTML = '';
+    media.appendChild(img);
+  } else {
+    media.innerHTML = '<div class="card-media-placeholder">no image</div>';
+  }
+
+  card.querySelector('.card-title').textContent  = result.title  || 'Untitled';
+  card.querySelector('.card-artist').textContent = result.artist || '';
+  card.querySelector('.card-meta').textContent   = result.meta   || '';
+  const link = card.querySelector('.card-link');
+  if (result.link) { link.href = result.link; link.style.display = ''; }
+  else link.style.display = 'none';
+}
+
+// ── roll ──────────────────────────────────────────────────────────────
+let barTimer = null;
+
+function setBar(pct) {
+  document.getElementById('bar').style.width = pct + '%';
+}
+
+async function roll() {
+  if (rolling) return;
+  rolling = true;
+  document.getElementById('btnRoll').disabled = true;
+  setBar(10);
+
+  buildCards();
+
+  const srcs = activeSources();
+  let done = 0;
+
+  await Promise.all(srcs.map(async src => {
+    try {
+      const result = await FETCHERS[src.id]();
+      renderCard(src.id, result);
+    } catch(e) {
+      renderCard(src.id, { error: e.message || 'fetch failed' });
+    }
+    done++;
+    setBar(10 + (done / srcs.length) * 85);
+  }));
+
+  setBar(100);
+  setTimeout(() => setBar(0), 600);
+  document.getElementById('btnRoll').disabled = false;
+  rolling = false;
+}
+
+// ── setup UI ──────────────────────────────────────────────────────────
+function showSetup() {
+  document.getElementById('main').style.display  = 'none';
+  document.getElementById('setup').style.display = '';
+  document.getElementById('keyDpla').value = keys.dpla;
+  document.getElementById('keyRijs').value = keys.rijs;
+}
+
+function showMain() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display  = '';
+  updateDots();
+}
+
+document.getElementById('btnSetup').onclick = showSetup;
+
+document.getElementById('btnSaveSetup').onclick = () => {
+  saveKeys();
+  showMain();
+  roll();
+};
+
+document.getElementById('btnCancelSetup').onclick = () => {
+  showMain();
+};
+
+// ── boot ──────────────────────────────────────────────────────────────
+loadKeys();
+showMain();
+roll();
+</script>
+</body>
+</html>
