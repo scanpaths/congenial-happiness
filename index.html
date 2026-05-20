@@ -32,18 +32,17 @@
   /* main */
   #main { display: flex; flex-direction: column; height: 100%; }
 
-  /* swipe track — all cards sit side by side in here */
+  /* swipe track */
   .swipe-track {
     flex: 1; min-height: 0;
-    display: flex;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
   }
 
-  /* card */
+  /* card — absolutely stacked on mobile, flex on desktop */
   .card {
-    flex: 0 0 100%; width: 100%;
-    position: relative;
+    position: absolute;
+    inset: 0;
     background: var(--card-bg);
     overflow: hidden;
     will-change: transform;
@@ -53,7 +52,9 @@
   .card-source-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: var(--accent); }
   .card-source-bar.clev { background: #c8972f; }
   .card-source-bar.vam  { background: #2fa878; }
-  .card-source-bar.smk  { background: #c42b2b; }
+  .card-source-bar.rijs { background: #c42b2b; }
+  .card-source-bar.wiki { background: #3366cc; }
+  .card-source-bar.smk  { background: #e8a020; }
 
   .card-media { width: 100%; height: 100%; background: var(--rule); overflow: hidden; position: relative; }
   .card-media img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; opacity: 0; transition: opacity 0.5s; }
@@ -82,7 +83,9 @@
   .pdot[data-src="artic"].cur { background: var(--accent); }
   .pdot[data-src="clev"].cur  { background: #c8972f; }
   .pdot[data-src="vam"].cur   { background: #2fa878; }
-  .pdot[data-src="smk"].cur   { background: #c42b2b; }
+  .pdot[data-src="rijs"].cur  { background: #c42b2b; }
+  .pdot[data-src="wiki"].cur  { background: #3366cc; }
+  .pdot[data-src="smk"].cur   { background: #e8a020; }
 
   button { font-family: 'DM Mono', monospace; cursor: pointer; border: none; outline: none; background: transparent; }
   #btnRoll { background: var(--ink); color: var(--bg); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 28px; transition: background 0.2s, transform 0.1s; }
@@ -94,9 +97,10 @@
   #btnClose { color: var(--ink3); font-size: 10px; letter-spacing: 0.06em; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
   #btnClose:hover { color: var(--ink); }
 
-  /* desktop: show all cards side by side, no swipe */
+  /* desktop: side by side flex */
   @media (min-width: 700px) {
-    .card { flex: 1; transition: none; border-right: 1px solid var(--rule); }
+    .swipe-track { display: flex; }
+    .card { position: relative; inset: auto; flex: 1; transition: none; border-right: 1px solid var(--rule); }
     .card:last-child { border-right: none; }
     .pdots { display: none; }
   }
@@ -108,12 +112,22 @@
 
   <div id="setup" style="display:none">
     <div class="setup-title">Sources</div>
-    <p class="setup-sub">All four sources are active with no setup required.</p>
+    <p class="setup-sub">ARTIC, Cleveland, V&amp;A, SMK, and Wikimedia Commons are always active. Add a Rijksmuseum key to enable that source.</p>
     <div class="key-group"><div class="key-label">Art Institute of Chicago <span class="badge free">no key needed</span></div></div>
     <div class="key-group"><div class="key-label">Cleveland Museum of Art <span class="badge free">no key needed</span></div></div>
     <div class="key-group"><div class="key-label">Victoria &amp; Albert Museum <span class="badge free">no key needed</span></div></div>
     <div class="key-group"><div class="key-label">SMK Copenhagen <span class="badge free">no key needed</span></div></div>
-    <div class="setup-actions"><button id="btnClose">Close</button></div>
+    <div class="key-group"><div class="key-label">Wikimedia Commons <span class="badge free">no key needed</span></div></div>
+    <hr style="border:none;border-top:1px solid var(--rule);margin:16px 0">
+    <div class="key-group">
+      <div class="key-label">Rijksmuseum</div>
+      <input type="password" id="keyRijs" placeholder="your API key" style="width:100%;padding:9px 10px;background:var(--card-bg);border:1px solid var(--rule);color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-top:6px">
+      <p style="font-size:10px;color:var(--ink3);margin-top:5px;line-height:1.6">Register at <a href="https://www.rijksmuseum.nl/en/rijksstudio" target="_blank" style="color:var(--accent)">rijksmuseum.nl/en/rijksstudio</a>, then find your key under Account → Advanced settings.</p>
+    </div>
+    <div class="setup-actions">
+      <button id="btnSave" style="background:var(--ink);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:12px 28px;cursor:pointer;border:none">Save</button>
+      <button id="btnClose">Close</button>
+    </div>
   </div>
 
   <div id="main" style="display:none">
@@ -127,11 +141,16 @@
 
 </div>
 <script>
+const LS_RIJS = 'mp_rijs_key';
+let rijsKey = localStorage.getItem(LS_RIJS) || '';
+
 const SOURCES = [
   { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
   { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
   { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
   { id: 'smk',   label: 'SMK Copenhagen',           barClass: 'smk' },
+  { id: 'wiki',  label: 'Wikimedia Commons',        barClass: 'wiki' },
+  ...(rijsKey ? [{ id: 'rijs', label: 'Rijksmuseum', barClass: 'rijs' }] : []),
 ];
 
 async function fetchArtic() {
@@ -165,6 +184,51 @@ async function fetchVam() {
   return { title: rec._primaryTitle || 'Untitled', artist: rec._primaryMaker?.name || '', meta: rec._primaryDate || '', image: `https://framemark.vam.ac.uk/collections/${rec._primaryImageId}/full/735,/0/default.jpg`, link: `https://collections.vam.ac.uk/item/${rec.systemNumber}` };
 }
 
+async function fetchRijs() {
+  const page = Math.floor(Math.random() * 2000) + 1;
+  const r = await fetch(`https://www.rijksmuseum.nl/api/en/collection?key=${rijsKey}&imgonly=true&ps=1&p=${page}&s=relevance`);
+  if (!r.ok) throw new Error('Rijksmuseum failed');
+  const j = await r.json();
+  const art = j.artObjects?.[0];
+  if (!art?.webImage?.url) throw new Error('no image');
+  return {
+    title:  art.title || 'Untitled',
+    artist: art.principalOrFirstMaker || '',
+    meta:   '',
+    image:  art.webImage.url,
+    link:   art.links?.web || `https://www.rijksmuseum.nl/en/collection/${art.objectNumber}`,
+  };
+}
+
+async function fetchCommons() {
+  // Pick a random file from the "Artworks" category on Commons
+  const cats = ['Artworks','Paintings','Drawings','Prints_(art)','Sculptures','Illustrations'];
+  const cat = cats[Math.floor(Math.random() * cats.length)];
+  // gcmlimit=50 gives us a pool to pick randomly from
+  const r = await fetch(
+    `https://commons.wikimedia.org/w/api.php?action=query&generator=categorymembers&gcmtitle=Category:${cat}&gcmtype=file&gcmnamespace=6&gcmlimit=50&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900&format=json&origin=*`
+  );
+  if (!r.ok) throw new Error('Commons failed');
+  const j = await r.json();
+  const pages = Object.values(j.query?.pages || {}).filter(p => p.imageinfo?.[0]?.url);
+  if (!pages.length) throw new Error('no Commons result');
+  const page = pages[Math.floor(Math.random() * pages.length)];
+  const info = page.imageinfo[0];
+  const meta = info.extmetadata || {};
+  const artist = meta.Artist?.value?.replace(/<[^>]+>/g, '') || '';
+  const title  = meta.ObjectName?.value || page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Untitled';
+  const date   = meta.DateTimeOriginal?.value || meta.Date?.value?.replace(/<[^>]+>/g, '') || '';
+  const img    = info.thumburl || info.url;
+  if (!img) throw new Error('no Commons image');
+  return {
+    title,
+    artist,
+    meta: date,
+    image: img,
+    link: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}`,
+  };
+}
+
 async function fetchSmk() {
   const offset = Math.floor(Math.random() * 24000);
   const r = await fetch(`https://api.smk.dk/api/v1/art/search?keys=*&has_image=true&public_domain=true&offset=${offset}&rows=1&lang=en`);
@@ -173,10 +237,16 @@ async function fetchSmk() {
   const a = j.items?.[0];
   const img = a?.image_thumbnail || a?.image_native;
   if (!img) throw new Error('no image');
-  return { title: a.titles?.[0]?.title || 'Untitled', artist: a.production?.[0]?.creator || '', meta: a.production_date?.[0]?.period || '', image: img, link: `https://open.smk.dk/en/artwork/image/${a.object_number}` };
+  return {
+    title:  a.titles?.[0]?.title || 'Untitled',
+    artist: a.production?.[0]?.creator || '',
+    meta:   a.production_date?.[0]?.period || '',
+    image:  img,
+    link:   `https://open.smk.dk/en/artwork/image/${a.object_number}`,
+  };
 }
 
-const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam, smk: fetchSmk };
+const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam, smk: fetchSmk, wiki: fetchCommons, rijs: fetchRijs };
 
 // ── swipe ─────────────────────────────────────────────────────────────
 let cur = 0;
@@ -186,7 +256,12 @@ const isDesktop = () => window.innerWidth >= 700;
 function goTo(idx) {
   const cards = [...document.querySelectorAll('.card')];
   cur = Math.max(0, Math.min(idx, cards.length - 1));
-  if (!isDesktop()) cards.forEach((c, i) => c.style.transform = `translateX(${(i - cur) * 100}%)`);
+  if (!isDesktop()) {
+    cards.forEach((c, i) => {
+      c.style.transform = `translateX(${(i - cur) * 100}%)`;
+      c.style.zIndex = i === cur ? 1 : 0;
+    });
+  }
   document.querySelectorAll('.pdot').forEach((d, i) => d.classList.toggle('cur', i === cur));
 }
 
@@ -224,7 +299,8 @@ function buildCards() {
     const card = document.createElement('div');
     card.className = 'card loading';
     card.dataset.src = src.id;
-    if (!isDesktop()) card.style.transform = `translateX(${i * 100}%)`;
+    card.style.transform = isDesktop() ? '' : `translateX(${i * 100}%)`;
+    card.style.zIndex = i === 0 ? 1 : 0;
     card.innerHTML = `
       <div class="card-source-bar ${src.barClass}"></div>
       <div class="card-media"><div class="card-media-placeholder">loading</div></div>
@@ -306,8 +382,21 @@ async function roll() {
 
 // ── setup ─────────────────────────────────────────────────────────────
 document.getElementById('btnSetup').onclick = () => {
+  document.getElementById('keyRijs').value = rijsKey;
   document.getElementById('main').style.display  = 'none';
   document.getElementById('setup').style.display = '';
+};
+document.getElementById('btnSave').onclick = () => {
+  const k = document.getElementById('keyRijs').value.trim();
+  if (k) localStorage.setItem(LS_RIJS, k); else localStorage.removeItem(LS_RIJS);
+  rijsKey = k;
+  // rebuild SOURCES dynamically
+  SOURCES.length = 5; // keep artic, clev, vam, smk, wiki
+  if (rijsKey) SOURCES.push({ id: 'rijs', label: 'Rijksmuseum', barClass: 'rijs' });
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display  = '';
+  rolling = false;
+  roll();
 };
 document.getElementById('btnClose').onclick = () => {
   document.getElementById('setup').style.display = 'none';
