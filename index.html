@@ -67,9 +67,8 @@
   }
   .dot.active { background: var(--accent); }
   .dot[data-src="met"].active { background: var(--accent2); }
-  .dot[data-src="dpla"].active { background: #2fa878; }
   .dot[data-src="clev"].active { background: #c8972f; }
-  .dot[data-src="euro"].active { background: #7c4fd4; }
+  .dot[data-src="vam"].active  { background: #2fa878; }
 
   /* ── setup screen ── */
   #setup {
@@ -172,9 +171,8 @@
     flex-shrink: 0;
   }
   .card-source-bar.met  { background: var(--accent2); }
-  .card-source-bar.dpla { background: #2fa878; }
   .card-source-bar.clev { background: #c8972f; }
-  .card-source-bar.euro { background: #7c4fd4; }
+  .card-source-bar.vam  { background: #2fa878; }
 
   .card-media {
     width: 100%;
@@ -348,62 +346,31 @@
 <div id="bar"></div>
 <div id="app">
 
-  <!-- SETUP SCREEN -->
   <div id="setup" style="display:none">
-    <div class="setup-title">API keys</div>
+    <div class="setup-title">Sources</div>
     <p class="setup-sub">
-      ARTIC, the Met, Cleveland, and Europeana work with no setup. DPLA requires a free API key —
-      add it below or leave blank to skip that source. You can also add your own Europeana key for higher rate limits.
+      All four sources are active with no setup required.
     </p>
 
     <div class="key-group">
-      <div class="key-label">
-        Art Institute of Chicago
-        <span class="badge free">no key needed</span>
-      </div>
+      <div class="key-label">Art Institute of Chicago <span class="badge free">no key needed</span></div>
       <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
-
     <div class="key-group">
-      <div class="key-label">
-        Metropolitan Museum of Art
-        <span class="badge free">no key needed</span>
-      </div>
+      <div class="key-label">Metropolitan Museum of Art <span class="badge free">no key needed</span></div>
       <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
-
     <div class="key-group">
-      <div class="key-label">
-        Cleveland Museum of Art
-        <span class="badge free">no key needed</span>
-      </div>
+      <div class="key-label">Cleveland Museum of Art <span class="badge free">no key needed</span></div>
       <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
-
     <div class="key-group">
-      <div class="key-label">
-        Europeana
-        <span class="badge free">no key needed</span>
-      </div>
-      <input type="password" id="keyEuro" placeholder="optional — your own API key">
-      <p class="setup-note">
-        Get a free key at <a href="https://apis.europeana.eu/en" target="_blank">apis.europeana.eu</a> for higher rate limits. Works without one.
-      </p>
-    </div>
-
-    <hr class="divider">
-
-    <div class="key-group">
-      <div class="key-label">DPLA API Key</div>
-      <input type="password" id="keyDpla" placeholder="32-character key">
-      <p class="setup-note">
-        Get a free key at <a href="https://pro.dp.la/developers/api-key" target="_blank">pro.dp.la/developers/api-key</a> — enter your email and check your inbox.
-      </p>
+      <div class="key-label">Victoria & Albert Museum <span class="badge free">no key needed</span></div>
+      <input type="text" value="(always active)" disabled style="opacity:0.4;cursor:default">
     </div>
 
     <div class="setup-actions">
-      <button id="btnSaveSetup">Save</button>
-      <button id="btnCancelSetup">Cancel</button>
+      <button id="btnCancelSetup">Close</button>
     </div>
   </div>
 
@@ -416,9 +383,8 @@
       <div class="source-dots" id="sourceDots">
         <div class="dot active" data-src="artic" title="Art Institute of Chicago"></div>
         <div class="dot active" data-src="met" title="Metropolitan Museum of Art"></div>
-        <div class="dot" data-src="dpla" title="DPLA"></div>
         <div class="dot active" data-src="clev" title="Cleveland Museum of Art"></div>
-        <div class="dot active" data-src="euro" title="Europeana"></div>
+        <div class="dot active" data-src="vam" title="Victoria & Albert Museum"></div>
       </div>
       <button id="btnRoll">Roll</button>
     </div>
@@ -427,34 +393,19 @@
 </div>
 
 <script>
-const LS_DPLA  = 'mp_dpla_key';
-const LS_RIJS  = 'mp_rijs_key';
-const LS_EURO  = 'mp_euro_key';
-
-let keys = { dpla: '', rijs: '', euro: '' };
+let keys = {};
 let rolling = false;
 
 // ── storage ──────────────────────────────────────────────────────────
-function loadKeys() {
-  keys.dpla = localStorage.getItem(LS_DPLA) || '';
-  keys.rijs = localStorage.getItem(LS_RIJS) || '';
-  keys.euro = localStorage.getItem(LS_EURO) || '';
-}
-function saveKeys() {
-  const d = document.getElementById('keyDpla').value.trim();
-  const e = document.getElementById('keyEuro').value.trim();
-  if (d) localStorage.setItem(LS_DPLA, d); else localStorage.removeItem(LS_DPLA);
-  if (e) localStorage.setItem(LS_EURO, e); else localStorage.removeItem(LS_EURO);
-  loadKeys();
-}
+function loadKeys() {}
+function saveKeys() {}
 
 // ── sources ───────────────────────────────────────────────────────────
 const SOURCES = [
   { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
   { id: 'met',   label: 'Met Museum',               barClass: 'met' },
-  { id: 'dpla',  label: 'DPLA',                     barClass: 'dpla', needsKey: true },
   { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
-  { id: 'euro',  label: 'Europeana',                barClass: 'euro' },
+  { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
 ];
 
 function activeSources() {
@@ -513,33 +464,6 @@ async function fetchMet() {
   throw new Error('Met: no image found after retries');
 }
 
-async function fetchDpla() {
-  if (!keys.dpla) throw new Error('no dpla key');
-  // random offset within visual arts
-  const page  = Math.floor(Math.random() * 500) + 1;
-  const r = await fetch(
-    `https://api.dp.la/v2/items?q=&page=${page}&page_size=5&type=image&api_key=${keys.dpla}`
-  );
-  if (!r.ok) throw new Error('DPLA fetch failed');
-  const j = await r.json();
-  const docs = j.docs?.filter(d => d.object);
-  if (!docs?.length) throw new Error('no DPLA image');
-  const item = docs[Math.floor(Math.random() * docs.length)];
-  const sr   = item.sourceResource || {};
-  const title  = Array.isArray(sr.title)  ? sr.title[0]  : sr.title  || 'Untitled';
-  const creator = Array.isArray(sr.creator) ? sr.creator[0] : sr.creator || '';
-  const date    = sr.date?.displayDate || '';
-  const subject = Array.isArray(sr.subject) ? sr.subject.slice(0,2).map(s=>s.name||s).join(', ') : '';
-  return {
-    title,
-    artist:  creator,
-    meta:    [date, subject, item.dataProvider].filter(Boolean).join(' · '),
-    image:   item.object,
-    link:    item.isShownAt || `https://dp.la/item/${item.id}`,
-    src:     'dpla',
-  };
-}
-
 async function fetchClev() {
   const skip = Math.floor(Math.random() * 3000);
   const r = await fetch(
@@ -562,34 +486,29 @@ async function fetchClev() {
   };
 }
 
-async function fetchEuro() {
-  const apiKey = keys.euro || 'api2demo';
-  // random start within a large art image pool (~500k results)
-  const start = Math.floor(Math.random() * 9900) + 1;
+async function fetchVam() {
+  // V&A has ~1.2M records; pick a random page of image-bearing objects
+  const page = Math.floor(Math.random() * 5000) + 1;
   const r = await fetch(
-    `https://api.europeana.eu/record/v2/search.json?wskey=${apiKey}&query=*&qf=TYPE:IMAGE&qf=IMAGE_SIZE:large&qf=IMAGE_SIZE:extra_large&theme=art&media=true&thumbnail=true&reusability=open&rows=1&start=${start}&profile=minimal`
+    `https://api.vam.ac.uk/v2/objects/search?images_exist=1&page_size=1&page=${page}&fields=systemNumber,_primaryTitle,_primaryMaker,_primaryDate,_primaryImageId,_images`
   );
-  if (!r.ok) throw new Error('Europeana fetch failed');
+  if (!r.ok) throw new Error('V&A fetch failed');
   const j = await r.json();
-  const item = j.items?.[0];
-  if (!item) throw new Error('no Europeana result');
-  const img = item.edmPreview?.[0];
-  if (!img) throw new Error('no Europeana image');
-  const title  = Array.isArray(item.title)  ? item.title[0]  : item.title  || 'Untitled';
-  const artist = Array.isArray(item.dcCreator) ? item.dcCreator[0] : item.dcCreator || '';
-  const provider = Array.isArray(item.dataProvider) ? item.dataProvider[0] : item.dataProvider || '';
-  const year = item.year?.[0] || '';
+  const rec = j.records?.[0];
+  if (!rec) throw new Error('no V&A result');
+  const imgId = rec._primaryImageId;
+  if (!imgId) throw new Error('no V&A image');
   return {
-    title,
-    artist,
-    meta: [year, provider].filter(Boolean).join(' · '),
-    image: img,
-    link:  `https://www.europeana.eu/item${item.id}`,
-    src:   'euro',
+    title:  rec._primaryTitle || 'Untitled',
+    artist: rec._primaryMaker?.name || '',
+    meta:   rec._primaryDate || '',
+    image:  `https://framemark.vam.ac.uk/collections/${imgId}/full/735,/0/default.jpg`,
+    link:   `https://collections.vam.ac.uk/item/${rec.systemNumber}`,
+    src:    'vam',
   };
 }
 
-const FETCHERS = { artic: fetchArtic, met: fetchMet, dpla: fetchDpla, clev: fetchClev, euro: fetchEuro };
+const FETCHERS = { artic: fetchArtic, met: fetchMet, clev: fetchClev, vam: fetchVam };
 
 // ── UI ────────────────────────────────────────────────────────────────
 function updateDots() {
@@ -698,8 +617,6 @@ async function roll() {
 function showSetup() {
   document.getElementById('main').style.display  = 'none';
   document.getElementById('setup').style.display = '';
-  document.getElementById('keyDpla').value = keys.dpla;
-  document.getElementById('keyEuro').value = keys.euro;
 }
 
 function showMain() {
@@ -709,16 +626,7 @@ function showMain() {
 }
 
 document.getElementById('btnSetup').onclick = showSetup;
-
-document.getElementById('btnSaveSetup').onclick = () => {
-  saveKeys();
-  showMain();
-  roll();
-};
-
-document.getElementById('btnCancelSetup').onclick = () => {
-  showMain();
-};
+document.getElementById('btnCancelSetup').onclick = showMain;
 
 // ── boot ──────────────────────────────────────────────────────────────
 loadKeys();
