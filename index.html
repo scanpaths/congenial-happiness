@@ -17,91 +17,192 @@
     --rule: #d8d0c4; --card-bg: #fffdf8; --accent: #c84b2f;
   }
   html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: 'DM Mono', monospace; }
-  #bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); width: 0%; transition: width 0.4s ease; z-index: 200; }
+  #bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); width: 0%; transition: width 0.4s ease; z-index: 300; }
   #app { display: flex; flex-direction: column; height: 100dvh; max-width: 1100px; margin: 0 auto; }
 
-  /* setup */
-  #setup { max-width: 520px; margin: 60px auto 0; padding: 0 24px; }
+  /* ── setup ── */
+  #setup { max-width: 520px; margin: 60px auto 0; padding: 0 24px; display: none; }
   .setup-title { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px; }
   .setup-sub { font-size: 11px; color: var(--ink2); line-height: 1.7; margin-bottom: 24px; }
   .key-group { margin-bottom: 14px; }
   .key-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink2); display: flex; align-items: center; gap: 8px; }
   .badge.free { font-size: 9px; padding: 1px 6px; border-radius: 3px; background: #d4f0e4; color: #1a6644; }
   .setup-actions { display: flex; gap: 16px; align-items: center; margin-top: 28px; }
+  input[type="password"] { width: 100%; padding: 9px 10px; background: var(--card-bg); border: 1px solid var(--rule); color: var(--ink); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; margin-top: 6px; }
+  .setup-note { font-size: 10px; color: var(--ink3); margin-top: 5px; line-height: 1.6; }
+  .setup-note a { color: var(--accent); }
+  hr.div { border: none; border-top: 1px solid var(--rule); margin: 16px 0; }
 
-  /* main */
+  /* ── main ── */
   #main { display: flex; flex-direction: column; height: 100%; }
 
-  /* swipe track */
-  .swipe-track {
+  /* ── overview: vertical slices ── */
+  #overview {
     flex: 1; min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slice {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    border-bottom: 1px solid var(--rule);
+    transition: flex 0.35s cubic-bezier(0.4,0,0.2,1);
+  }
+  .slice:last-child { border-bottom: none; }
+
+  .slice-img {
+    width: 100%; height: 100%;
+    background: var(--rule);
     position: relative;
     overflow: hidden;
   }
+  .slice-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .slice-img img.loaded { opacity: 1; }
+  .slice-img-placeholder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ink3); letter-spacing: 0.05em;
+  }
 
-  /* card — absolutely stacked on mobile, flex on desktop */
-  .card {
-    position: absolute;
-    inset: 0;
+  .slice-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 2;
+    background: var(--accent);
+  }
+  .slice-bar.clev { background: #c8972f; }
+  .slice-bar.vam  { background: #2fa878; }
+  .slice-bar.smk  { background: #e8a020; }
+  .slice-bar.wiki { background: #3366cc; }
+  .slice-bar.rijs { background: #c42b2b; }
+
+  .slice-caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 5px 10px;
     background: var(--card-bg);
+    border-top: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: 8px;
+    z-index: 2;
+  }
+  .slice-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 11px; line-height: 1.2; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; min-width: 0;
+  }
+  .slice-artist { font-size: 9px; color: var(--ink3); white-space: nowrap; flex-shrink: 0; }
+
+  .slice.loading .slice-img { animation: pulse 1.4s ease infinite; }
+  .slice.loading .slice-caption { display: none; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* ── swipe view (expanded) ── */
+  #swipe-view {
+    display: none;
+    flex: 1; min-height: 0;
+    position: relative;
+    overflow: hidden;
+    background: var(--card-bg);
+  }
+  #swipe-view.active { display: block; }
+
+  .scard {
+    position: absolute; inset: 0;
     overflow: hidden;
     will-change: transform;
     transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
   }
+  .scard-img {
+    width: 100%; height: 100%;
+    background: var(--rule);
+    position: relative; overflow: hidden;
+  }
+  .scard-img img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
+    display: block; opacity: 0; transition: opacity 0.5s;
+  }
+  .scard-img img.loaded { opacity: 1; }
+  .scard-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3;
+    background: var(--accent);
+  }
+  .scard-bar.clev { background: #c8972f; }
+  .scard-bar.vam  { background: #2fa878; }
+  .scard-bar.smk  { background: #e8a020; }
+  .scard-bar.wiki { background: #3366cc; }
+  .scard-bar.rijs { background: #c42b2b; }
+  .scard-caption {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 6px 10px;
+    background: var(--card-bg); border-top: 1px solid var(--rule);
+    display: flex; align-items: baseline; gap: 8px; z-index: 2;
+  }
+  .scard-title {
+    font-family: 'DM Serif Display', serif; font-size: 12px; line-height: 1.2;
+    color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; min-width: 0;
+  }
+  .scard-artist { font-size: 9px; color: var(--ink3); white-space: nowrap; flex-shrink: 0; }
+  .scard-link {
+    font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor;
+    padding-bottom: 1px; flex-shrink: 0;
+  }
 
-  .card-source-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: var(--accent); }
-  .card-source-bar.clev { background: #c8972f; }
-  .card-source-bar.vam  { background: #2fa878; }
-  .card-source-bar.rijs { background: #c42b2b; }
-  .card-source-bar.wiki { background: #3366cc; }
-  .card-source-bar.smk  { background: #e8a020; }
+  /* back button overlaid top-left in swipe mode */
+  #btnBack {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    background: rgba(245,240,232,0.9); color: var(--ink);
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 6px 12px; border: 1px solid var(--rule);
+    cursor: pointer; display: none;
+  }
+  #btnBack.visible { display: block; }
 
-  .card-media { width: 100%; height: 100%; background: var(--rule); overflow: hidden; position: relative; }
-  .card-media img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; opacity: 0; transition: opacity 0.5s; }
-  .card-media img.loaded { opacity: 1; }
-  .card-media-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--ink3); letter-spacing: 0.05em; }
-  .card-error { font-size: 10px; color: var(--accent); padding: 40px 18px; text-align: center; line-height: 1.7; }
-
-  .card-body { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 10px; background: var(--card-bg); border-top: 1px solid var(--rule); display: flex; align-items: baseline; gap: 8px; z-index: 2; }
-  .card-title { font-family: 'DM Serif Display', serif; font-size: 12px; line-height: 1.2; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
-  .card-artist { font-size: 9px; color: var(--ink3); white-space: nowrap; flex-shrink: 0; }
-  .card-meta { display: none; }
-  .card-source-label { display: none; }
-  .card-link { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; flex-shrink: 0; }
-  .card-link:hover { opacity: 0.7; }
-  .card.loading .card-body { display: none; }
-  .card.loading .card-media { animation: pulse 1.4s ease infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-  /* bottom bar */
-  .actions { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--rule); flex-shrink: 0; background: var(--bg); }
-
-  /* position dots (mobile) */
+  /* pdots in swipe mode */
   .pdots { display: flex; gap: 7px; align-items: center; }
   .pdot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); transition: background 0.25s, transform 0.25s; cursor: pointer; }
   .pdot.cur { transform: scale(1.5); }
   .pdot[data-src="artic"].cur { background: var(--accent); }
   .pdot[data-src="clev"].cur  { background: #c8972f; }
   .pdot[data-src="vam"].cur   { background: #2fa878; }
-  .pdot[data-src="rijs"].cur  { background: #c42b2b; }
-  .pdot[data-src="wiki"].cur  { background: #3366cc; }
   .pdot[data-src="smk"].cur   { background: #e8a020; }
+  .pdot[data-src="wiki"].cur  { background: #3366cc; }
+  .pdot[data-src="rijs"].cur  { background: #c42b2b; }
 
+  /* ── bottom bar ── */
+  .actions {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    padding: 12px 20px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--rule); flex-shrink: 0; background: var(--bg);
+  }
   button { font-family: 'DM Mono', monospace; cursor: pointer; border: none; outline: none; background: transparent; }
   #btnRoll { background: var(--ink); color: var(--bg); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 28px; transition: background 0.2s, transform 0.1s; }
   #btnRoll:hover { background: var(--accent); }
   #btnRoll:active { transform: scale(0.97); }
   #btnRoll:disabled { opacity: 0.4; cursor: default; }
-  #btnSetup { color: var(--ink3); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
-  #btnSetup:hover { color: var(--ink); }
-  #btnClose { color: var(--ink3); font-size: 10px; letter-spacing: 0.06em; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
-  #btnClose:hover { color: var(--ink); }
+  #btnSources { color: var(--ink3); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 0; border-bottom: 1px solid var(--rule); transition: color 0.2s; }
+  #btnSources:hover { color: var(--ink); }
+  #btnClose { color: var(--ink3); font-size: 10px; letter-spacing: 0.06em; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  #btnSave { background: var(--ink); color: var(--bg); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; padding: 12px 28px; cursor: pointer; border: none; }
 
-  /* desktop: side by side flex */
+  /* ── desktop: all side by side, no swipe ── */
   @media (min-width: 700px) {
-    .swipe-track { display: flex; }
-    .card { position: relative; inset: auto; flex: 1; transition: none; border-right: 1px solid var(--rule); }
-    .card:last-child { border-right: none; }
+    #overview { flex-direction: row; }
+    .slice { border-bottom: none; border-right: 1px solid var(--rule); }
+    .slice:last-child { border-right: none; }
+    #swipe-view { display: none !important; }
+    #btnBack { display: none !important; }
     .pdots { display: none; }
   }
 </style>
@@ -110,7 +211,8 @@
 <div id="bar"></div>
 <div id="app">
 
-  <div id="setup" style="display:none">
+  <!-- SETUP -->
+  <div id="setup">
     <div class="setup-title">Sources</div>
     <p class="setup-sub">ARTIC, Cleveland, V&amp;A, SMK, and Wikimedia Commons are always active. Add a Rijksmuseum key to enable that source.</p>
     <div class="key-group"><div class="key-label">Art Institute of Chicago <span class="badge free">no key needed</span></div></div>
@@ -118,22 +220,30 @@
     <div class="key-group"><div class="key-label">Victoria &amp; Albert Museum <span class="badge free">no key needed</span></div></div>
     <div class="key-group"><div class="key-label">SMK Copenhagen <span class="badge free">no key needed</span></div></div>
     <div class="key-group"><div class="key-label">Wikimedia Commons <span class="badge free">no key needed</span></div></div>
-    <hr style="border:none;border-top:1px solid var(--rule);margin:16px 0">
+    <hr class="div">
     <div class="key-group">
       <div class="key-label">Rijksmuseum</div>
-      <input type="password" id="keyRijs" placeholder="your API key" style="width:100%;padding:9px 10px;background:var(--card-bg);border:1px solid var(--rule);color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-top:6px">
-      <p style="font-size:10px;color:var(--ink3);margin-top:5px;line-height:1.6">Register at <a href="https://www.rijksmuseum.nl/en/rijksstudio" target="_blank" style="color:var(--accent)">rijksmuseum.nl/en/rijksstudio</a>, then find your key under Account → Advanced settings.</p>
+      <input type="password" id="keyRijs" placeholder="your API key">
+      <p class="setup-note">Register at <a href="https://www.rijksmuseum.nl/en/rijksstudio" target="_blank">rijksmuseum.nl/en/rijksstudio</a> → Account → Advanced settings.</p>
     </div>
     <div class="setup-actions">
-      <button id="btnSave" style="background:var(--ink);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:12px 28px;cursor:pointer;border:none">Save</button>
+      <button id="btnSave">Save</button>
       <button id="btnClose">Close</button>
     </div>
   </div>
 
-  <div id="main" style="display:none">
-    <div class="swipe-track" id="track"></div>
+  <!-- MAIN -->
+  <div id="main">
+    <!-- overview: 5 slices -->
+    <div id="overview"></div>
+
+    <!-- expanded swipe view -->
+    <div id="swipe-view">
+      <button id="btnBack">← Back</button>
+    </div>
+
     <div class="actions">
-      <button id="btnSetup">Sources</button>
+      <button id="btnSources">Sources</button>
       <div class="pdots" id="pdots"></div>
       <button id="btnRoll">Roll</button>
     </div>
@@ -144,15 +254,19 @@
 const LS_RIJS = 'mp_rijs_key';
 let rijsKey = localStorage.getItem(LS_RIJS) || '';
 
-const SOURCES = [
-  { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
-  { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
-  { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
-  { id: 'smk',   label: 'SMK Copenhagen',           barClass: 'smk' },
-  { id: 'wiki',  label: 'Wikimedia Commons',        barClass: 'wiki' },
-  ...(rijsKey ? [{ id: 'rijs', label: 'Rijksmuseum', barClass: 'rijs' }] : []),
-];
+function buildSources() {
+  return [
+    { id: 'artic', label: 'Art Institute of Chicago', barClass: '' },
+    { id: 'clev',  label: 'Cleveland Museum of Art',  barClass: 'clev' },
+    { id: 'vam',   label: 'Victoria & Albert Museum', barClass: 'vam' },
+    { id: 'smk',   label: 'SMK Copenhagen',           barClass: 'smk' },
+    { id: 'wiki',  label: 'Wikimedia Commons',        barClass: 'wiki' },
+    ...(rijsKey ? [{ id: 'rijs', label: 'Rijksmuseum', barClass: 'rijs' }] : []),
+  ];
+}
+let SOURCES = buildSources();
 
+// ── fetchers ──────────────────────────────────────────────────────────
 async function fetchArtic() {
   const page = Math.floor(Math.random() * 5000) + 1;
   const r = await fetch(`https://api.artic.edu/api/v1/artworks?page=${page}&limit=1&fields=id,title,artist_display,date_display,image_id`);
@@ -160,7 +274,7 @@ async function fetchArtic() {
   const j = await r.json();
   const a = j.data?.[0];
   if (!a?.image_id) throw new Error('no image');
-  return { title: a.title, artist: a.artist_display?.split('\n')[0] || '', meta: a.date_display || '', image: `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg`, link: `https://www.artic.edu/artworks/${a.id}` };
+  return { title: a.title, artist: a.artist_display?.split('\n')[0] || '', image: `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg`, link: `https://www.artic.edu/artworks/${a.id}` };
 }
 
 async function fetchClev() {
@@ -171,7 +285,7 @@ async function fetchClev() {
   const a = j.data?.[0];
   const img = a?.images?.web?.url || a?.images?.print?.url;
   if (!img) throw new Error('no image');
-  return { title: a.title || 'Untitled', artist: a.creators?.[0]?.description || '', meta: a.creation_date || '', image: img, link: a.url || '' };
+  return { title: a.title || 'Untitled', artist: a.creators?.[0]?.description || '', image: img, link: a.url || '' };
 }
 
 async function fetchVam() {
@@ -181,52 +295,7 @@ async function fetchVam() {
   const j = await r.json();
   const rec = j.records?.[0];
   if (!rec?._primaryImageId) throw new Error('no image');
-  return { title: rec._primaryTitle || 'Untitled', artist: rec._primaryMaker?.name || '', meta: rec._primaryDate || '', image: `https://framemark.vam.ac.uk/collections/${rec._primaryImageId}/full/735,/0/default.jpg`, link: `https://collections.vam.ac.uk/item/${rec.systemNumber}` };
-}
-
-async function fetchRijs() {
-  const page = Math.floor(Math.random() * 2000) + 1;
-  const r = await fetch(`https://www.rijksmuseum.nl/api/en/collection?key=${rijsKey}&imgonly=true&ps=1&p=${page}&s=relevance`);
-  if (!r.ok) throw new Error('Rijksmuseum failed');
-  const j = await r.json();
-  const art = j.artObjects?.[0];
-  if (!art?.webImage?.url) throw new Error('no image');
-  return {
-    title:  art.title || 'Untitled',
-    artist: art.principalOrFirstMaker || '',
-    meta:   '',
-    image:  art.webImage.url,
-    link:   art.links?.web || `https://www.rijksmuseum.nl/en/collection/${art.objectNumber}`,
-  };
-}
-
-async function fetchCommons() {
-  // Pick a random file from the "Artworks" category on Commons
-  const cats = ['Artworks','Paintings','Drawings','Prints_(art)','Sculptures','Illustrations'];
-  const cat = cats[Math.floor(Math.random() * cats.length)];
-  // gcmlimit=50 gives us a pool to pick randomly from
-  const r = await fetch(
-    `https://commons.wikimedia.org/w/api.php?action=query&generator=categorymembers&gcmtitle=Category:${cat}&gcmtype=file&gcmnamespace=6&gcmlimit=50&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900&format=json&origin=*`
-  );
-  if (!r.ok) throw new Error('Commons failed');
-  const j = await r.json();
-  const pages = Object.values(j.query?.pages || {}).filter(p => p.imageinfo?.[0]?.url);
-  if (!pages.length) throw new Error('no Commons result');
-  const page = pages[Math.floor(Math.random() * pages.length)];
-  const info = page.imageinfo[0];
-  const meta = info.extmetadata || {};
-  const artist = meta.Artist?.value?.replace(/<[^>]+>/g, '') || '';
-  const title  = meta.ObjectName?.value || page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Untitled';
-  const date   = meta.DateTimeOriginal?.value || meta.Date?.value?.replace(/<[^>]+>/g, '') || '';
-  const img    = info.thumburl || info.url;
-  if (!img) throw new Error('no Commons image');
-  return {
-    title,
-    artist,
-    meta: date,
-    image: img,
-    link: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}`,
-  };
+  return { title: rec._primaryTitle || 'Untitled', artist: rec._primaryMaker?.name || '', image: `https://framemark.vam.ac.uk/collections/${rec._primaryImageId}/full/735,/0/default.jpg`, link: `https://collections.vam.ac.uk/item/${rec.systemNumber}` };
 }
 
 async function fetchSmk() {
@@ -237,123 +306,187 @@ async function fetchSmk() {
   const a = j.items?.[0];
   const img = a?.image_thumbnail || a?.image_native;
   if (!img) throw new Error('no image');
-  return {
-    title:  a.titles?.[0]?.title || 'Untitled',
-    artist: a.production?.[0]?.creator || '',
-    meta:   a.production_date?.[0]?.period || '',
-    image:  img,
-    link:   `https://open.smk.dk/en/artwork/image/${a.object_number}`,
-  };
+  return { title: a.titles?.[0]?.title || 'Untitled', artist: a.production?.[0]?.creator || '', image: img, link: `https://open.smk.dk/en/artwork/image/${a.object_number}` };
+}
+
+async function fetchCommons() {
+  const cats = ['Artworks','Paintings','Drawings','Prints_(art)','Sculptures','Illustrations'];
+  const cat = cats[Math.floor(Math.random() * cats.length)];
+  const r = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=categorymembers&gcmtitle=Category:${cat}&gcmtype=file&gcmnamespace=6&gcmlimit=50&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=900&format=json&origin=*`);
+  if (!r.ok) throw new Error('Commons failed');
+  const j = await r.json();
+  const pages = Object.values(j.query?.pages || {}).filter(p => p.imageinfo?.[0]?.url);
+  if (!pages.length) throw new Error('no result');
+  const page = pages[Math.floor(Math.random() * pages.length)];
+  const info = page.imageinfo[0];
+  const meta = info.extmetadata || {};
+  const artist = meta.Artist?.value?.replace(/<[^>]+>/g, '') || '';
+  const title = meta.ObjectName?.value || page.title?.replace('File:', '').replace(/\.[^.]+$/, '') || 'Untitled';
+  const img = info.thumburl || info.url;
+  if (!img) throw new Error('no image');
+  return { title, artist, image: img, link: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}` };
+}
+
+async function fetchRijs() {
+  if (!rijsKey) throw new Error('no key');
+  const page = Math.floor(Math.random() * 2000) + 1;
+  const r = await fetch(`https://www.rijksmuseum.nl/api/en/collection?key=${rijsKey}&imgonly=true&ps=1&p=${page}&s=relevance`);
+  if (!r.ok) throw new Error('Rijksmuseum failed');
+  const j = await r.json();
+  const art = j.artObjects?.[0];
+  if (!art?.webImage?.url) throw new Error('no image');
+  return { title: art.title || 'Untitled', artist: art.principalOrFirstMaker || '', image: art.webImage.url, link: art.links?.web || '' };
 }
 
 const FETCHERS = { artic: fetchArtic, clev: fetchClev, vam: fetchVam, smk: fetchSmk, wiki: fetchCommons, rijs: fetchRijs };
 
-// ── swipe ─────────────────────────────────────────────────────────────
-let cur = 0;
+// ── state ─────────────────────────────────────────────────────────────
+let results = {}; // srcId -> result
 let rolling = false;
+let swipeIdx = 0;
+let inSwipe = false;
 const isDesktop = () => window.innerWidth >= 700;
 
-function goTo(idx) {
-  const cards = [...document.querySelectorAll('.card')];
-  cur = Math.max(0, Math.min(idx, cards.length - 1));
-  if (!isDesktop()) {
-    cards.forEach((c, i) => {
-      c.style.transform = `translateX(${(i - cur) * 100}%)`;
-      c.style.zIndex = i === cur ? 1 : 0;
-    });
-  }
-  document.querySelectorAll('.pdot').forEach((d, i) => d.classList.toggle('cur', i === cur));
-}
-
-let tx0 = 0, dx = 0, dragging = false;
-const getTrack = () => document.getElementById('track');
-
-function onTS(e) { if (isDesktop()) return; tx0 = e.touches[0].clientX; dx = 0; dragging = true; }
-function onTM(e) {
-  if (!dragging || isDesktop()) return;
-  dx = e.touches[0].clientX - tx0;
-  [...document.querySelectorAll('.card')].forEach((c, i) => {
-    c.style.transition = 'none';
-    c.style.transform = `translateX(calc(${(i - cur) * 100}% + ${dx}px))`;
+// ── overview ──────────────────────────────────────────────────────────
+function buildOverview() {
+  const ov = document.getElementById('overview');
+  ov.innerHTML = '';
+  SOURCES.forEach(src => {
+    const slice = document.createElement('div');
+    slice.className = 'slice loading';
+    slice.dataset.src = src.id;
+    slice.innerHTML = `
+      <div class="slice-bar ${src.barClass}"></div>
+      <div class="slice-img"><div class="slice-img-placeholder">loading</div></div>
+      <div class="slice-caption">
+        <div class="slice-title">—</div>
+        <div class="slice-artist"></div>
+      </div>`;
+    slice.onclick = () => { if (!isDesktop()) openSwipe(SOURCES.findIndex(s => s.id === src.id)); };
+    ov.appendChild(slice);
   });
 }
-function onTE() {
-  if (!dragging || isDesktop()) return;
-  dragging = false;
-  [...document.querySelectorAll('.card')].forEach(c => c.style.transition = '');
-  const thresh = window.innerWidth * 0.25;
-  if (dx < -thresh) goTo(cur + 1);
-  else if (dx > thresh) goTo(cur - 1);
-  else goTo(cur);
+
+function renderSlice(srcId, result) {
+  const slice = document.querySelector(`.slice[data-src="${srcId}"]`);
+  if (!slice) return;
+  slice.classList.remove('loading');
+  const imgDiv = slice.querySelector('.slice-img');
+  if (result.error || !result.image) {
+    imgDiv.innerHTML = `<div class="slice-img-placeholder">${result.error || 'no image'}</div>`;
+  } else {
+    const img = document.createElement('img');
+    img.onload = () => img.classList.add('loaded');
+    img.onerror = () => { imgDiv.innerHTML = '<div class="slice-img-placeholder">no image</div>'; };
+    img.src = result.image;
+    imgDiv.innerHTML = '';
+    imgDiv.appendChild(img);
+  }
+  slice.querySelector('.slice-title').textContent = result.title || '—';
+  slice.querySelector('.slice-artist').textContent = result.artist || '';
 }
 
-// ── build / render ────────────────────────────────────────────────────
-function buildCards() {
-  const t = getTrack();
-  t.innerHTML = '';
+// ── swipe view ────────────────────────────────────────────────────────
+function buildSwipeCards() {
+  const sv = document.getElementById('swipe-view');
+  // remove existing scards
+  sv.querySelectorAll('.scard').forEach(c => c.remove());
+  // build pdots
   const pd = document.getElementById('pdots');
   pd.innerHTML = '';
-  cur = 0;
 
   SOURCES.forEach((src, i) => {
     const card = document.createElement('div');
-    card.className = 'card loading';
+    card.className = 'scard';
     card.dataset.src = src.id;
-    card.style.transform = isDesktop() ? '' : `translateX(${i * 100}%)`;
-    card.style.zIndex = i === 0 ? 1 : 0;
+    card.style.transform = `translateX(${(i - swipeIdx) * 100}%)`;
+    card.style.zIndex = i === swipeIdx ? 1 : 0;
+    const res = results[src.id];
     card.innerHTML = `
-      <div class="card-source-bar ${src.barClass}"></div>
-      <div class="card-media"><div class="card-media-placeholder">loading</div></div>
-      <div class="card-body">
-        <div class="card-source-label">${src.label}</div>
-        <div class="card-title">—</div>
-        <div class="card-artist"></div>
-        <div class="card-meta"></div>
-        <a class="card-link" href="#" target="_blank">View</a>
+      <div class="scard-bar ${src.barClass}"></div>
+      <div class="scard-img"><div class="slice-img-placeholder">${res ? '' : 'loading'}</div></div>
+      <div class="scard-caption">
+        <div class="scard-title">${res?.title || '—'}</div>
+        <div class="scard-artist">${res?.artist || ''}</div>
+        ${res?.link ? `<a class="scard-link" href="${res.link}" target="_blank">View</a>` : ''}
       </div>`;
-    t.appendChild(card);
+    if (res?.image) {
+      const imgDiv = card.querySelector('.scard-img');
+      const img = document.createElement('img');
+      img.onload = () => img.classList.add('loaded');
+      img.src = res.image;
+      imgDiv.innerHTML = '';
+      imgDiv.appendChild(img);
+    }
+    sv.appendChild(card);
 
     const dot = document.createElement('div');
-    dot.className = 'pdot' + (i === 0 ? ' cur' : '');
+    dot.className = 'pdot' + (i === swipeIdx ? ' cur' : '');
     dot.dataset.src = src.id;
     dot.onclick = () => goTo(i);
     pd.appendChild(dot);
   });
-
-  t.removeEventListener('touchstart', onTS);
-  t.removeEventListener('touchmove', onTM);
-  t.removeEventListener('touchend', onTE);
-  t.addEventListener('touchstart', onTS, { passive: true });
-  t.addEventListener('touchmove', onTM, { passive: true });
-  t.addEventListener('touchend', onTE);
 }
 
-function renderCard(srcId, result) {
-  const card = document.querySelector(`.card[data-src="${srcId}"]`);
-  if (!card) return;
-  card.classList.remove('loading');
-  const media = card.querySelector('.card-media');
-  if (result.error) {
-    media.innerHTML = `<div class="card-error">${result.error}</div>`;
-    card.querySelector('.card-title').textContent = '—';
-    card.querySelector('.card-link').style.display = 'none';
-    return;
-  }
-  if (result.image) {
-    const img = document.createElement('img');
-    img.onload  = () => img.classList.add('loaded');
-    img.onerror = () => { media.innerHTML = '<div class="card-media-placeholder">no image</div>'; };
-    img.src = result.image;
-    media.innerHTML = '';
-    media.appendChild(img);
-  } else {
-    media.innerHTML = '<div class="card-media-placeholder">no image</div>';
-  }
-  card.querySelector('.card-title').textContent  = result.title  || 'Untitled';
-  card.querySelector('.card-artist').textContent = result.artist || '';
-  const link = card.querySelector('.card-link');
-  if (result.link) { link.href = result.link; link.style.display = ''; }
-  else link.style.display = 'none';
+function openSwipe(idx) {
+  swipeIdx = idx;
+  inSwipe = true;
+  buildSwipeCards();
+  document.getElementById('overview').style.display = 'none';
+  const sv = document.getElementById('swipe-view');
+  sv.classList.add('active');
+  document.getElementById('btnBack').classList.add('visible');
+  attachSwipeListeners();
+}
+
+function closeSwipe() {
+  inSwipe = false;
+  document.getElementById('overview').style.display = '';
+  document.getElementById('swipe-view').classList.remove('active');
+  document.getElementById('btnBack').classList.remove('visible');
+  document.getElementById('pdots').innerHTML = '';
+}
+
+function goTo(idx) {
+  const cards = [...document.querySelectorAll('.scard')];
+  swipeIdx = Math.max(0, Math.min(idx, cards.length - 1));
+  cards.forEach((c, i) => {
+    c.style.transform = `translateX(${(i - swipeIdx) * 100}%)`;
+    c.style.zIndex = i === swipeIdx ? 1 : 0;
+  });
+  document.querySelectorAll('.pdot').forEach((d, i) => d.classList.toggle('cur', i === swipeIdx));
+}
+
+// ── touch swipe ───────────────────────────────────────────────────────
+let tx0 = 0, dx = 0, dragging = false;
+
+function onTS(e) { tx0 = e.touches[0].clientX; dx = 0; dragging = true; }
+function onTM(e) {
+  if (!dragging) return;
+  dx = e.touches[0].clientX - tx0;
+  [...document.querySelectorAll('.scard')].forEach((c, i) => {
+    c.style.transition = 'none';
+    c.style.transform = `translateX(calc(${(i - swipeIdx) * 100}% + ${dx}px))`;
+  });
+}
+function onTE() {
+  if (!dragging) return;
+  dragging = false;
+  [...document.querySelectorAll('.scard')].forEach(c => c.style.transition = '');
+  const thresh = window.innerWidth * 0.25;
+  if (dx < -thresh) goTo(swipeIdx + 1);
+  else if (dx > thresh) goTo(swipeIdx - 1);
+  else goTo(swipeIdx);
+}
+
+function attachSwipeListeners() {
+  const sv = document.getElementById('swipe-view');
+  sv.removeEventListener('touchstart', onTS);
+  sv.removeEventListener('touchmove', onTM);
+  sv.removeEventListener('touchend', onTE);
+  sv.addEventListener('touchstart', onTS, { passive: true });
+  sv.addEventListener('touchmove', onTM, { passive: true });
+  sv.addEventListener('touchend', onTE);
 }
 
 // ── roll ──────────────────────────────────────────────────────────────
@@ -362,14 +495,22 @@ function setBar(p) { document.getElementById('bar').style.width = p + '%'; }
 async function roll() {
   if (rolling) return;
   rolling = true;
+  results = {};
+  if (inSwipe) closeSwipe();
   document.getElementById('btnRoll').disabled = true;
   setBar(10);
-  buildCards();
+  buildOverview();
   let done = 0;
   try {
     await Promise.all(SOURCES.map(async src => {
-      try { renderCard(src.id, await FETCHERS[src.id]()); }
-      catch(e) { renderCard(src.id, { error: e.message || 'failed' }); }
+      try {
+        const res = await FETCHERS[src.id]();
+        results[src.id] = res;
+        renderSlice(src.id, res);
+      } catch(e) {
+        results[src.id] = { error: e.message || 'failed' };
+        renderSlice(src.id, results[src.id]);
+      }
       setBar(10 + (++done / SOURCES.length) * 85);
     }));
   } finally {
@@ -380,32 +521,30 @@ async function roll() {
   }
 }
 
-// ── setup ─────────────────────────────────────────────────────────────
-document.getElementById('btnSetup').onclick = () => {
+// ── setup handlers ────────────────────────────────────────────────────
+document.getElementById('btnSources').onclick = () => {
   document.getElementById('keyRijs').value = rijsKey;
-  document.getElementById('main').style.display  = 'none';
+  document.getElementById('main').style.display = 'none';
   document.getElementById('setup').style.display = '';
 };
 document.getElementById('btnSave').onclick = () => {
   const k = document.getElementById('keyRijs').value.trim();
   if (k) localStorage.setItem(LS_RIJS, k); else localStorage.removeItem(LS_RIJS);
   rijsKey = k;
-  // rebuild SOURCES dynamically
-  SOURCES.length = 5; // keep artic, clev, vam, smk, wiki
-  if (rijsKey) SOURCES.push({ id: 'rijs', label: 'Rijksmuseum', barClass: 'rijs' });
+  SOURCES = buildSources();
   document.getElementById('setup').style.display = 'none';
-  document.getElementById('main').style.display  = '';
+  document.getElementById('main').style.display = '';
   rolling = false;
   roll();
 };
 document.getElementById('btnClose').onclick = () => {
   document.getElementById('setup').style.display = 'none';
-  document.getElementById('main').style.display  = '';
+  document.getElementById('main').style.display = '';
 };
+document.getElementById('btnBack').onclick = closeSwipe;
 document.getElementById('btnRoll').onclick = () => { rolling = false; roll(); };
 
 // ── boot ──────────────────────────────────────────────────────────────
-document.getElementById('main').style.display = '';
 setTimeout(roll, 50);
 </script>
 </body>
